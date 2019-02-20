@@ -9,7 +9,7 @@ model = Sequential()
 model.add(Dense(units=200,input_dim=80*80, activation='relu', kernel_initializer='glorot_uniform'))
 
 # output layer
-model.add(Dense(units=1, activation='sigmoid', kernel_initializer='RandomNormal'))
+model.add(Dense(units=3, activation='sigmoid', kernel_initializer='RandomNormal'))
 
 # compile the model using traditional Machine Learning losses and optimizers
 model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
@@ -23,6 +23,7 @@ observation = env.reset()
 prev_input = None
 
 # Macros
+STOP_ACTION = 1
 UP_ACTION = 2
 DOWN_ACTION = 3
 
@@ -72,6 +73,7 @@ def get_my_pos(input):
 
 # main loop
 while (True):
+    env.render()
     # preprocess the observation, set input as difference between images
     cur_input = prepro(observation)
 
@@ -83,9 +85,16 @@ while (True):
     prev_input = cur_input
 
     # forward the policy network and sample action according to the proba distribution
-    proba = model.predict(np.expand_dims(x, axis=1).T)
-    action = UP_ACTION if np.random.uniform() < proba else DOWN_ACTION
-    y = 1 if action == 2 else 0  # 0 and 1 are our labels
+    prob = model.predict(np.expand_dims(x, axis=1).T)
+    prob = prob[0]
+    prob_max_index = np.argmax(prob)
+    #action = UP_ACTION if np.random.uniform() < proba else DOWN_ACTION
+    if prob[0] == prob[1] and prob[0] == prob[2]:
+        prob_max_index = np.random.randint(0, 2)
+    action = prob_max_index + 1
+    #y = 1 if action == 2 else 0  # 0 and 1 are our labels
+    y = np.zeros(3)
+    y[prob_max_index] = 1
 
     direction_reward = 0
     if len(my_pos) > 0 and len(cur_ball) > 1:
@@ -97,6 +106,11 @@ while (True):
             direction_reward = 0.5
         elif my_pos[0] > cur_ball[1] and action == UP_ACTION:
             direction_reward = 0.5
+        elif cur_ball[1] > my_pos[0] and cur_ball[1] < my_pos[-1] and action == STOP_ACTION:
+            direction_reward = 0.5
+        elif cur_ball[1] > my_pos[0] and cur_ball[1] < my_pos[-1] and action != STOP_ACTION:
+            direction_reward = -0.5
+
     # log the input and label to train later
     x_train.append(x)
     y_train.append(y)
