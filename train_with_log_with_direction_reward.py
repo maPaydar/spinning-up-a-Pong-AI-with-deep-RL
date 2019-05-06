@@ -43,7 +43,7 @@ import os
 # initialize variables
 resume = True
 running_reward = None
-epochs_before_saving = 10
+epochs_before_saving = 50
 log_dir = './log' + datetime.now().strftime("%Y%m%d-%H%M%S") + "/"
 
 # load pre-trained model if exist
