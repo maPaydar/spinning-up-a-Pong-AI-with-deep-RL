@@ -73,7 +73,7 @@ def get_my_pos(input):
 
 # main loop
 while (True):
-    env.render()
+    #env.render()
     # preprocess the observation, set input as difference between images
     cur_input = prepro(observation)
 
